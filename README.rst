@@ -10,6 +10,14 @@ pytest-codecov
     :target: https://pypi.org/project/pytest-codecov
     :alt: Python versions
 
+.. image:: https://github.com/seantis/pytest-codecov/actions/workflows/python-tox.yaml/badge.svg
+    :target: https://github.com/seantis/pytest-codecov/actions
+    :alt: Tests
+
+.. image:: https://codecov.io/gh/seantis/pytest-codecov/branch/master/graph/badge.svg?token=CwujQmq61X
+    :target: https://codecov.io/gh/seantis/pytest-codecov
+    :alt: Codecov.io
+
 Pytest plugin for uploading `pytest-cov` results to `codecov.io`
 
 ----
