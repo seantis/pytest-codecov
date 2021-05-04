@@ -1,0 +1,12 @@
+[paths]
+source =
+    src
+    */site-packages
+
+[run]
+source =
+    pytest_codecov
+
+[report]
+show_missing = true
+precision = 2
