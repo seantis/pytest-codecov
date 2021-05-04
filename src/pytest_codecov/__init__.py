@@ -5,6 +5,7 @@ import re
 
 import pytest_codecov.git as git
 
+from .codecov import CodecovError
 from .codecov import CodecovUploader
 
 
@@ -99,7 +100,6 @@ class CodecovPlugin:
             return
 
         uploader = CodecovUploader(
-            terminalreporter,
             config.option.codecov_slug,
             commit=config.option.codecov_commit,
             branch=config.option.codecov_branch,
@@ -111,7 +111,45 @@ class CodecovPlugin:
             terminalreporter.write_line(uploader.get_payload())
             return
 
-        uploader.upload()
+        terminalreporter.section('Codecov.io upload')
+
+        if not config.option.codecov_slug:
+            terminalreporter.write_line(
+                'ERROR: Failed to determine git repository slug. '
+                'Cannot upload without a valid slug.',
+                red=True,
+                bold=True,
+            )
+            terminalreporter.line('')
+            return
+        if not config.option.codecov_branch:
+            terminalreporter.write_line(
+                'WARNING: Failed to determine git repository branch.',
+                yellow=True,
+                bold=True,
+            )
+        if not config.option.codecov_commit:
+            terminalreporter.write_line(
+                'WARNING: Failed to determine git commit.',
+                yellow=True,
+                bold=True,
+            )
+        try:
+            terminalreporter.write_line('Pinging codecov API...')
+            uploader.ping()
+            terminalreporter.line('')
+            terminalreporter.write_line(
+                'Uploading reports to storage endpoint...'
+            )
+            uploader.upload()
+            terminalreporter.line('')
+            terminalreporter.write_line(
+                'Successfully queued reports for processing.',
+                green=True
+            )
+            terminalreporter.line('')
+        except CodecovError as error:
+            terminalreporter.write_line(f'ERROR: {error}', red=True, bold=True)
 
 
 def pytest_configure(config):

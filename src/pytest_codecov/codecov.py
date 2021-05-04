@@ -10,24 +10,28 @@ def package():
     return f'pytest_codecov-{version}'
 
 
+class CodecovError(Exception):
+    pass
+
+
 class CodecovUploader:
     api_endpoint = 'https://codecov.io'
     storage_endpoint = 'https://storage.googleapis.com/codecov/'
 
-    def __init__(self, reporter, slug, commit=None, branch=None, token=None):
-        self.reporter = reporter
+    def __init__(self, slug, commit=None, branch=None, token=None):
         self.slug = slug
         self.commit = commit
         self.branch = branch
         self.token = token
+        self.store_url = None
         self._buffer = io.StringIO()
         # network preamble
-        self._buffer.write('<<<<<< network\n')
+        self._buffer.write('<<<<<< network')
 
     def add_coverage_report(self, cov, filename='coverage.xml', **kwargs):
         with tempfile.NamedTemporaryFile(mode='r') as xml_report:
             # embed xml report
-            self._buffer.write(f'# path=./{filename}\n')
+            self._buffer.write(f'\n# path=./{filename}\n')
             cov.xml_report(outfile=xml_report.name)
             xml_report.seek(0)
             self._buffer.write(xml_report.read())
@@ -36,36 +40,12 @@ class CodecovUploader:
     def get_payload(self):
         return self._buffer.getvalue()
 
-    def upload(self):
-        self.reporter.section('Codecov.io upload')
+    def ping(self):
         if not self.slug:
-            self.reporter.write_line(
-                'ERROR: Failed to determine git repository slug. '
-                'Cannot upload without a valid slug.',
-                red=True,
-                bold=True,
+            raise CodecovError(
+                'Failed to determine git repository slug. '
+                'Cannot upload without a valid slug.'
             )
-            self.reporter.line('')
-            return
-        if not self.branch:
-            self.reporter.write_line(
-                'WARNING: Failed to determine git repository branch.',
-                yellow=True,
-                bold=True,
-            )
-        if not self.branch:
-            self.reporter.write_line(
-                'WARNING: Failed to determine git commit.',
-                yellow=True,
-                bold=True,
-            )
-        self.reporter.write_line(f'Slug:   {self.slug}')
-        self.reporter.write_line(f'Commit: {self.commit}')
-        self.reporter.write_line(f'Branch: {self.branch}')
-
-        # retrieve storage url from API
-        self.reporter.line('')
-        self.reporter.write_line('Pinging codecov API.')
         api_url = urljoin(self.api_endpoint, '/upload/v4')
         headers = {
             'X-Reduced-Redundancy': 'false',
@@ -91,18 +71,15 @@ class CodecovUploader:
         response = requests.post(api_url, headers=headers, params=params)
         lines = response.text.splitlines()
         if len(lines) != 2 or not lines[1].startswith(self.storage_endpoint):
-            self.reporter.write_line(
-                f'ERROR: Invalid response from codecov API:\n{response.text}',
-                red=True,
-                bold=True,
+            raise CodecovError(
+                f'Invalid response from codecov API:\n{response.text}'
             )
-            self.reporter.line('')
-            return
+        self.store_url = lines[1]
 
-        # upload file to retrieved storage url
-        store_url = lines[1]
-        self.reporter.line('')
-        self.reporter.write_line(f'Uploading report to {store_url}.')
+    def upload(self):
+        if not self.store_url:
+            raise CodecovError('Need to ping API before upload.')
+
         headers = {
             'Content-Type': 'application/x-gzip',
             'Content-Encoding': 'gzip',
@@ -111,21 +88,11 @@ class CodecovUploader:
         with gzip.open(gz_payload, 'wb', 9) as payload:
             payload.write(self.get_payload().encode('utf-8'))
         gz_payload.seek(0)
-        requests.put(store_url, headers=headers, data=gz_payload)
-
-        self.reporter.line('')
-        self.reporter.write_line(f'Uploading report to {store_url}.')
-        if not response.ok:
-            self.reporter.write_line(
-                'ERROR: Failed to upload report to storage endpoint.',
-                red=True,
-                bold=True,
-            )
-            self.reporter.line('')
-            return
-
-        self.reporter.write_line(
-            'Successfully queued reports for processing.',
-            green=True
+        response = requests.put(
+            self.store_url, headers=headers, data=gz_payload
         )
-        self.reporter.line('')
+
+        if not response.ok:
+            raise CodecovError('Failed to upload report to storage endpoint.')
+
+        self.store_url = None  # NOTE: Invalidate store url after upload
