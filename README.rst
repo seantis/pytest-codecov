@@ -18,7 +18,7 @@ pytest-codecov
     :target: https://codecov.io/gh/seantis/pytest-codecov
     :alt: Codecov.io
 
-Pytest plugin for uploading `pytest-cov` results to `codecov.io`
+Pytest plugin for uploading `pytest_cov`_ results to `codecov`_
 
 ----
 
@@ -75,5 +75,5 @@ If you encounter any problems, please `file an issue`_ along with a detailed des
 .. _`tox`: https://tox.readthedocs.io/en/latest/
 .. _`pip`: https://pypi.org/project/pip/
 .. _`PyPI`: https://pypi.org/project
-.. _`pytest-cov`: https://github.com/pytest-dev/pytest-cov
-.. _`codecov.io`: https://codecov.io
+.. _`pytest_cov`: https://github.com/pytest-dev/pytest-cov
+.. _`codecov`: https://codecov.io
