@@ -21,7 +21,7 @@ try:
             slug = '/'.join(_parts[-2:])
 
 
-except ImportError:
+except Exception:
     # For now we just ignore every error, so we don't have to
     # double wrap the try block with GitPython specific exceptions
     pass
