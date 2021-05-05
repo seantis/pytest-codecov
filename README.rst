@@ -1,5 +1,6 @@
 ==============
 pytest-codecov
+==============
 
 .. image:: https://img.shields.io/pypi/v/pytest-codecov.svg
     :target: https://pypi.org/project/pytest-codecov
@@ -16,7 +17,6 @@ pytest-codecov
 .. image:: https://codecov.io/gh/seantis/pytest-codecov/branch/master/graph/badge.svg?token=CwujQmq61X
     :target: https://codecov.io/gh/seantis/pytest-codecov
     :alt: Codecov.io
-==============
 
 Pytest plugin for uploading `pytest-cov`_ results to `codecov.io`_
 
