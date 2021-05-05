@@ -1,27 +1,36 @@
-def test_options(testdir, no_gitpython):
-    config = testdir.parseconfig('')
+import pytest
+
+from pytest import UsageError
+from pytest_codecov import CodecovPlugin
+
+
+def test_options(pytester, no_gitpython):
+    config = pytester.parseconfig('')
     assert config.option.codecov is False
     assert config.option.codecov_token is None
     assert config.option.codecov_slug is None
     assert config.option.codecov_branch is None
     assert config.option.codecov_commit is None
     assert config.option.codecov_dump is False
+    assert config.option.codecov_upload_on_failure is True
 
-    config = testdir.parseconfig('--codecov')
+    config = pytester.parseconfig('--codecov')
     assert config.option.codecov is True
     assert config.option.codecov_token is None
     assert config.option.codecov_slug is None
     assert config.option.codecov_branch is None
     assert config.option.codecov_commit is None
     assert config.option.codecov_dump is False
+    assert config.option.codecov_upload_on_failure is True
 
-    config = testdir.parseconfig(
+    config = pytester.parseconfig(
         '--codecov',
         '--codecov-token=12345678-1234-1234-1234-1234567890ab',
         '--codecov-slug=seantis/pytest_codecov',
         '--codecov-branch=master',
         '--codecov-commit=deadbeef',
-        '--codecov-dump'
+        '--codecov-dump',
+        '--no-codecov-on-failure'
     )
     assert config.option.codecov is True
     assert (
@@ -31,3 +40,74 @@ def test_options(testdir, no_gitpython):
     assert config.option.codecov_branch == 'master'
     assert config.option.codecov_commit == 'deadbeef'
     assert config.option.codecov_dump is True
+    assert config.option.codecov_upload_on_failure is False
+
+
+def test_options_invalid_token(pytester, no_gitpython):
+    with pytest.raises(UsageError, match=r'Invalid.* token'):
+        pytester.parseconfig('--codecov', '--codecov-token=invalid')
+
+
+def test_options_invalid_slug(pytester, no_gitpython):
+    with pytest.raises(UsageError, match=r'Invalid.* slug'):
+        pytester.parseconfig('--codecov', '--codecov-slug=invalid')
+
+
+def test_upload_report_no_slug(pytester, dummy_reporter, dummy_uploader,
+                               dummy_cov, no_gitpython):
+    config = pytester.parseconfig('--codecov')
+    plugin = CodecovPlugin()
+    plugin.upload_report(dummy_reporter, config, dummy_cov)
+    assert len(dummy_reporter.lines) == 3
+    assert 'Failed to determine git repository slug.' in dummy_reporter.text
+
+
+def test_upload_report_no_branch(pytester, dummy_reporter, dummy_uploader,
+                                 dummy_cov, no_gitpython):
+    config = pytester.parseconfig(
+        '--codecov',
+        '--codecov-slug=foo/bar',
+        '--codecov-commit=deadbeef'
+    )
+    plugin = CodecovPlugin()
+    plugin.upload_report(dummy_reporter, config, dummy_cov)
+    assert 'Failed to determine git repository branch.' in dummy_reporter.text
+
+
+def test_upload_report_no_commit(pytester, dummy_reporter, dummy_uploader,
+                                 dummy_cov, no_gitpython):
+    config = pytester.parseconfig(
+        '--codecov',
+        '--codecov-slug=foo/bar',
+        '--codecov-branch=master'
+    )
+    plugin = CodecovPlugin()
+    plugin.upload_report(dummy_reporter, config, dummy_cov)
+    assert 'Failed to determine git commit.' in dummy_reporter.text
+
+
+def test_upload_report_dump(pytester, dummy_reporter, dummy_uploader,
+                            dummy_cov, no_gitpython):
+    config = pytester.parseconfig('--codecov', '--codecov-dump')
+    plugin = CodecovPlugin()
+    plugin.upload_report(dummy_reporter, config, dummy_cov)
+    assert 'Prepared Codecov.io payload' in dummy_reporter.text
+
+
+def test_upload_report(pytester, dummy_reporter, dummy_uploader,
+                       dummy_cov, no_gitpython):
+    config = pytester.parseconfig(
+        '--codecov',
+        '--codecov-token=12345678-1234-1234-1234-1234567890ab',
+        '--codecov-slug=foo/bar',
+        '--codecov-branch=master',
+        '--codecov-commit=deadbeef'
+    )
+    plugin = CodecovPlugin()
+    plugin.upload_report(dummy_reporter, config, dummy_cov)
+    assert (
+        'Environment:\n'
+        'Slug:   foo/bar\n'
+        'Branch: master\n'
+        'Commit: deadbeef\n'
+    ) in dummy_reporter.text

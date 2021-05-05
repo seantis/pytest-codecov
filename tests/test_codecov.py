@@ -48,6 +48,12 @@ def test_ping(dummy_cov, mock_requests):
     # TODO: Verify correct url/headers/params
 
 
+def test_ping_no_slug(dummy_cov, mock_requests):
+    uploader = CodecovUploader(None)
+    with pytest.raises(CodecovError, match=r'valid slug'):
+        uploader.ping()
+
+
 def test_upload(dummy_cov, mock_requests):
     uploader = CodecovUploader('seantis/pytest-codecov')
     with pytest.raises(CodecovError, match=r'Need to ping API before upload'):

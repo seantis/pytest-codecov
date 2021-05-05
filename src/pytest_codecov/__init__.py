@@ -4,9 +4,7 @@ import pytest
 import re
 
 import pytest_codecov.git as git
-
-from .codecov import CodecovError
-from .codecov import CodecovUploader
+import pytest_codecov.codecov as codecov
 
 
 __version__ = '0.1.0'
@@ -77,29 +75,22 @@ def pytest_addoption(parser, pluginmanager):
         '--codecov-dump',
         action='store_true',
         dest='codecov_dump',
+        default=False,
         help='Dump codecov payload to terminal instead of uploading it'
     )
-
-    parser.addini('codecov_token', 'Codecov token for private repositories.')
-    parser.addini('codecov_slug', 'Codecov repository slug.')
+    group.addoption(
+        '--no-codecov-on-failure',
+        action='store_false',
+        dest='codecov_upload_on_failure',
+        default=True,
+        help='Don\'t upload coverage results on test failure'
+    )
 
 
 class CodecovPlugin:
 
-    @pytest.mark.trylast
-    def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
-        cov_plugin = config.pluginmanager.get_plugin('_cov')
-        if cov_plugin.cov_controller is None:
-            return
-
-        if cov_plugin.cov_total is None:
-            return
-
-        cov = cov_plugin.cov_controller.cov
-        if cov is None:
-            return
-
-        uploader = CodecovUploader(
+    def upload_report(self, terminalreporter, config, cov):
+        uploader = codecov.CodecovUploader(
             config.option.codecov_slug,
             commit=config.option.codecov_commit,
             branch=config.option.codecov_branch,
@@ -134,6 +125,12 @@ class CodecovPlugin:
                 yellow=True,
                 bold=True,
             )
+        terminalreporter.write_line(
+            'Environment:\n'
+            f'Slug:   {config.option.codecov_slug}\n'
+            f'Branch: {config.option.codecov_branch}\n'
+            f'Commit: {config.option.codecov_commit}\n'
+        )
         try:
             terminalreporter.write_line('Pinging codecov API...')
             uploader.ping()
@@ -148,11 +145,29 @@ class CodecovPlugin:
                 green=True
             )
             terminalreporter.line('')
-        except CodecovError as error:
+        except codecov.CodecovError as error:
             terminalreporter.write_line(f'ERROR: {error}', red=True, bold=True)
 
+    @pytest.mark.trylast
+    def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
+        cov_plugin = config.pluginmanager.get_plugin('_cov')
+        if cov_plugin.cov_controller is None:
+            return
 
-def pytest_configure(config):
+        if cov_plugin.cov_total is None:
+            return
+
+        cov = cov_plugin.cov_controller.cov
+        if cov is None:
+            return
+
+        if exitstatus != 0 and not config.option.codecov_upload_on_failure:
+            return
+
+        self.upload_report(terminalreporter, config, cov)
+
+
+def pytest_configure(config):  # pragma: no cover
     # NOTE: if cov is missing we fail silently
     if config.option.codecov and config.pluginmanager.has_plugin('_cov'):
         config.pluginmanager.register(CodecovPlugin())

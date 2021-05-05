@@ -1,6 +1,5 @@
 ==============
 pytest-codecov
-==============
 
 .. image:: https://img.shields.io/pypi/v/pytest-codecov.svg
     :target: https://pypi.org/project/pytest-codecov
@@ -17,8 +16,9 @@ pytest-codecov
 .. image:: https://codecov.io/gh/seantis/pytest-codecov/branch/master/graph/badge.svg?token=CwujQmq61X
     :target: https://codecov.io/gh/seantis/pytest-codecov
     :alt: Codecov.io
+==============
 
-Pytest plugin for uploading `pytest_cov`_ results to `codecov`_
+Pytest plugin for uploading `pytest-cov`_ results to `codecov.io`_
 
 ----
 
@@ -28,13 +28,16 @@ This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`
 Features
 --------
 
-* TODO
+* Uploads coverage results to `codecov.io` at the end of the tests.
+* Detects current project slug, branch and commit using `GitPython`, when installed and running inside a git repository.
 
 
 Requirements
 ------------
 
-* TODO
+* `pytest-cov`_
+* `requests`_
+* `GitPython`_ (Optional, for auto detecting some meta data)
 
 
 Installation
@@ -48,12 +51,15 @@ You can install "pytest-codecov" via `pip`_ from `PyPI`_::
 Usage
 -----
 
-* TODO
+* Add :code:`--codecov` to pytest arguments to enable upload
+* Supply your Codecov token either through :code:`--codecov-token=` or `CODECOV_TOKEN` environment variable. Refer to your CI's documentation to properly secure that token.
+
 
 Contributing
 ------------
 Contributions are very welcome. Tests can be run with `tox`_, please ensure
 the coverage at least stays the same before you submit a pull request.
+
 
 License
 -------
@@ -75,5 +81,7 @@ If you encounter any problems, please `file an issue`_ along with a detailed des
 .. _`tox`: https://tox.readthedocs.io/en/latest/
 .. _`pip`: https://pypi.org/project/pip/
 .. _`PyPI`: https://pypi.org/project
-.. _`pytest_cov`: https://github.com/pytest-dev/pytest-cov
-.. _`codecov`: https://codecov.io
+.. _`pytest-cov`: https://github.com/pytest-dev/pytest-cov
+.. _`codecov.io`: https://codecov.io
+.. _`requests`: https://github.com/psf/requests
+.. _`GitPython`: https://github.com/gitpython-developers/GitPython

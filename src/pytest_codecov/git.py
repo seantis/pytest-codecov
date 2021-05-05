@@ -4,8 +4,9 @@ commit = None
 
 try:
     import git
+    import os
 
-    repo = git.Repo('.')
+    repo = git.Repo(os.getcwd())
     commit = repo.head.commit.hexsha
 
     if not repo.head.is_detached:
@@ -19,7 +20,6 @@ try:
         _parts = _url.split(':')[-1].split('/')
         if len(_parts) >= 2:
             slug = '/'.join(_parts[-2:])
-
 
 except Exception:
     # For now we just ignore every error, so we don't have to

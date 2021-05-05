@@ -34,6 +34,9 @@ setup(
         'coverage[toml]>=5.2.1',
         'requests>=2.25.1'
     ],
+    tests_require=[
+        'GitPython>=3.1.15'
+    ],
     extras_require={
         'git': [
             'GitPython>=3.1.15'
