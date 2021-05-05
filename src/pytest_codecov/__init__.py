@@ -7,7 +7,7 @@ import pytest_codecov.git as git
 import pytest_codecov.codecov as codecov
 
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 token_regex = re.compile(
     r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
 )
