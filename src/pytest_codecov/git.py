@@ -66,7 +66,7 @@ try:
     def _git_ls_files():
         repo = git.Repo(os.getcwd())
         return [
-            e.name for e in repo.head.commit.tree.traverse()
+            e.path for e in repo.head.commit.tree.traverse()
             if not hasattr(e, 'blobs')
         ]
 
