@@ -10,13 +10,24 @@ def test_init():
     assert uploader.commit is None
     assert uploader.branch is None
     assert uploader.token is None
-    assert uploader.get_payload() == '<<<<<< network'
+    assert uploader.get_payload() == ''
+
+
+def test_write_network_files():
+    uploader = CodecovUploader('seantis/pytest-codecov')
+    uploader.write_network_files(['foo.py'])
+    assert uploader.get_payload() == (
+        'foo.py\n'
+        '<<<<<< network'
+    )
 
 
 def test_add_coverage_report(dummy_cov):
     uploader = CodecovUploader('seantis/pytest-codecov')
+    uploader.write_network_files(['foo.py'])
     uploader.add_coverage_report(dummy_cov)
     assert uploader.get_payload() == (
+        'foo.py\n'
         '<<<<<< network\n'
         '# path=./coverage.xml\n'
         '<dummy_report/>\n'
@@ -25,6 +36,7 @@ def test_add_coverage_report(dummy_cov):
 
     uploader.add_coverage_report(dummy_cov, filename='coverage_2.xml')
     assert uploader.get_payload() == (
+        'foo.py\n'
         '<<<<<< network\n'
         '# path=./coverage.xml\n'
         '<dummy_report/>\n'

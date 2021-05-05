@@ -25,8 +25,11 @@ class CodecovUploader:
         self.token = token
         self.store_url = None
         self._buffer = io.StringIO()
-        # network preamble
-        self._buffer.write('<<<<<< network')
+
+    def write_network_files(self, files):
+        self._buffer.write(
+            '\n'.join(files + ['<<<<<< network'])
+        )
 
     def add_coverage_report(self, cov, filename='coverage.xml', **kwargs):
         with tempfile.NamedTemporaryFile(mode='r') as xml_report:

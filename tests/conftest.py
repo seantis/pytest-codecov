@@ -1,6 +1,7 @@
 import pytest
 import pytest_codecov
 import pytest_codecov.codecov
+import pytest_codecov.git
 
 from importlib import reload
 
@@ -12,6 +13,10 @@ def no_gitpython(monkeypatch):
     monkeypatch.setattr('pytest_codecov.git.slug', None)
     monkeypatch.setattr('pytest_codecov.git.branch', None)
     monkeypatch.setattr('pytest_codecov.git.commit', None)
+    monkeypatch.setattr(
+        'pytest_codecov.git.ls_files',
+        pytest_codecov.git.os_ls_files
+    )
 
 
 class DummyReporter:
@@ -108,6 +113,9 @@ class DummyUploader:
     #       more exhaustively.
 
     def __init__(self, slug, **kwargs):
+        pass
+
+    def write_network_files(self, files):
         pass
 
     def add_coverage_report(self, cov, **kwargs):

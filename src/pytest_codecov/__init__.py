@@ -96,6 +96,7 @@ class CodecovPlugin:
             branch=config.option.codecov_branch,
             token=config.option.codecov_token,
         )
+        uploader.write_network_files(git.ls_files())
         uploader.add_coverage_report(cov)
         if config.option.codecov_dump:
             terminalreporter.section('Prepared Codecov.io payload')
