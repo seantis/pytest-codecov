@@ -43,7 +43,7 @@ def pytest_addoption(parser, pluginmanager):
         '--codecov-token',
         action='store',
         dest='codecov_token',
-        default=os.environ.get('CODECOV_TOKEN'),
+        default=os.environ.get('CODECOV_TOKEN') or None,
         metavar='TOKEN',
         type=validate_token,
         help='Set the codecov token for private repositories.'
@@ -52,7 +52,7 @@ def pytest_addoption(parser, pluginmanager):
         '--codecov-slug',
         action='store',
         dest='codecov_slug',
-        default=os.environ.get('CODECOV_SLUG', git.slug),
+        default=os.environ.get('CODECOV_SLUG') or git.slug,
         metavar='SLUG',
         type=validate_slug,
         help='Set the git repository slug manually.'
@@ -61,14 +61,14 @@ def pytest_addoption(parser, pluginmanager):
         '--codecov-branch',
         action='store',
         dest='codecov_branch',
-        default=os.environ.get('CODECOV_BRANCH', git.branch),
+        default=os.environ.get('CODECOV_BRANCH') or git.branch,
         help='Set the git branch manually.'
     )
     group.addoption(
         '--codecov-commit',
         action='store',
         dest='codecov_commit',
-        default=os.environ.get('CODECOV_COMMIT', git.commit),
+        default=os.environ.get('CODECOV_COMMIT') or git.commit,
         help='Set the git commit hash manually.'
     )
     group.addoption(
