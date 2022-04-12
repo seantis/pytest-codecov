@@ -48,7 +48,7 @@ def os_ls_files():
 try:
     import git
 
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo(search_parent_directories=True)
     commit = repo.head.commit.hexsha
 
     if not repo.head.is_detached:
@@ -64,7 +64,7 @@ try:
             slug = '/'.join(_parts[-2:])
 
     def _git_ls_files():
-        repo = git.Repo(os.getcwd())
+        repo = git.Repo(search_parent_directories=True)
         return [
             e.path for e in repo.head.commit.tree.traverse()
             if not hasattr(e, 'blobs')
