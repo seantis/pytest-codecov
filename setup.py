@@ -14,7 +14,7 @@ def read(fname):
 
 setup(
     name='pytest-codecov',
-    version='0.4.0',
+    version='0.5.0',
     author='David Salvisberg',
     author_email='david.salvisberg@seantis.ch',
     maintainer='David Salvisberg',
