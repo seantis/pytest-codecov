@@ -12,7 +12,7 @@ token_regex = re.compile(
     r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
 )
 slug_regex = re.compile(
-    r'^[0-9a-zA-Z-_]+/[0-9a-zA-Z-_]+$'
+    r'^[0-9a-zA-Z_.-]+/[0-9a-zA-Z_.-]+$'
 )
 
 
