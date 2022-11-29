@@ -7,7 +7,7 @@ import pytest_codecov.git as git
 import pytest_codecov.codecov as codecov
 
 
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 token_regex = re.compile(
     r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
 )
@@ -149,7 +149,7 @@ class CodecovPlugin:
         except codecov.CodecovError as error:
             terminalreporter.write_line(f'ERROR: {error}', red=True, bold=True)
 
-    @pytest.mark.trylast
+    @pytest.hookimpl(trylast=True)
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
         cov_plugin = config.pluginmanager.get_plugin('_cov')
         if cov_plugin.cov_controller is None:
