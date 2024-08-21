@@ -97,7 +97,19 @@ class CodecovPlugin:
             token=config.option.codecov_token,
         )
         uploader.write_network_files(git.ls_files())
-        uploader.add_coverage_report(cov)
+        from coverage.misc import CoverageException
+        try:
+            uploader.add_coverage_report(cov)
+        except CoverageException as exc:
+            terminalreporter.section('Codecov.io payload')
+            terminalreporter.write_line(
+                f'ERROR: Failed to generate XML report: {exc}',
+                red=True,
+                bold=True,
+            )
+            terminalreporter.line('')
+            return
+
         if config.option.codecov_dump:
             terminalreporter.section('Prepared Codecov.io payload')
             terminalreporter.write_line(uploader.get_payload())
@@ -153,9 +165,6 @@ class CodecovPlugin:
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
         cov_plugin = config.pluginmanager.get_plugin('_cov')
         if cov_plugin.cov_controller is None:
-            return
-
-        if cov_plugin.cov_total is None:
             return
 
         cov = cov_plugin.cov_controller.cov
