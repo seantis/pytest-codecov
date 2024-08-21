@@ -111,3 +111,22 @@ def test_upload_report(pytester, dummy_reporter, dummy_uploader,
         'Branch: master\n'
         'Commit: deadbeef\n'
     ) in dummy_reporter.text
+
+
+def test_upload_report_generation_failure(
+    pytester, dummy_reporter, dummy_uploader,
+    dummy_cov, no_gitpython
+):
+    dummy_uploader.fail_report_generation = True
+    config = pytester.parseconfig(
+        '--codecov',
+        '--codecov-token=12345678-1234-1234-1234-1234567890ab',
+        '--codecov-slug=foo/bar',
+        '--codecov-branch=master',
+        '--codecov-commit=deadbeef'
+    )
+    plugin = CodecovPlugin()
+    plugin.upload_report(dummy_reporter, config, dummy_cov)
+    assert (
+        'ERROR: Failed to generate XML report: test exception'
+    ) in dummy_reporter.text

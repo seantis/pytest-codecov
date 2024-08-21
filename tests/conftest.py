@@ -3,6 +3,7 @@ import pytest_codecov
 import pytest_codecov.codecov
 import pytest_codecov.git
 
+from coverage.misc import CoverageException
 from importlib import reload
 
 pytest_plugins = 'pytester'
@@ -113,13 +114,14 @@ class DummyUploader:
     #       more exhaustively.
 
     def __init__(self, slug, **kwargs):
-        pass
+        self.fail_report_generation = False
 
     def write_network_files(self, files):
         pass
 
     def add_coverage_report(self, cov, **kwargs):
-        pass
+        if self.fail_report_generation:
+            raise CoverageException('test exception')
 
     def get_payload(self):
         return 'stub'
@@ -131,12 +133,24 @@ class DummyUploader:
         pass
 
 
+class DummyUploaderFactory:
+
+    fail_report_generation = False
+
+    def __call__(self, slug, **kwargs):
+        inst = DummyUploader(slug, **kwargs)
+        inst.fail_report_generation = self.fail_report_generation
+        return inst
+
+
 @pytest.fixture
 def dummy_uploader(monkeypatch):
+    factory = DummyUploaderFactory()
     monkeypatch.setattr(
         'pytest_codecov.codecov.CodecovUploader',
-        DummyUploader
+        factory
     )
+    return factory
 
 
 # NOTE: Ensure modules are reloaded when coverage.py is looking.
