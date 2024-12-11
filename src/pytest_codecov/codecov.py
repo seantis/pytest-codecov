@@ -16,7 +16,7 @@ class CodecovError(Exception):
 
 class CodecovUploader:
     api_endpoint = 'https://codecov.io'
-    storage_endpoint = 'https://storage.googleapis.com/codecov/'
+    storage_endpoint = 'https://storage.googleapis.com/codecov-production/'
 
     def __init__(self, slug, commit=None, branch=None, token=None):
         self.slug = slug
