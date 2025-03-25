@@ -1,10 +1,12 @@
+import importlib
+import json
+
+from coverage.misc import CoverageException
 import pytest
+
 import pytest_codecov
 import pytest_codecov.codecov
 import pytest_codecov.git
-
-from coverage.misc import CoverageException
-from importlib import reload
 
 pytest_plugins = 'pytester'
 
@@ -71,6 +73,9 @@ class MockResponse:
         self.text = text
         self.ok = ok
 
+    def json(self):
+        return json.loads(self.text)
+
 
 class MockRequests:
 
@@ -81,6 +86,10 @@ class MockRequests:
 
     def set_response(self, text, ok=True):
         self._response = MockResponse(text, ok=ok)
+
+    def set_responses(self, *texts):
+        assert texts
+        self._response = [MockResponse(text) for text in texts]
 
     def pop(self):
         calls = self._calls
@@ -95,6 +104,12 @@ class MockRequests:
             raise ConnectionError()
 
         self._calls.append((method.lower(), url, kwargs))
+        if isinstance(self._response, list):
+            response = self._response.pop(0)
+            if not self._response:
+                # repeat the final response indefinitely
+                self._response = response
+            return response
         return self._response
 
 
@@ -162,5 +177,5 @@ def dummy_uploader(monkeypatch):
 # NOTE: Ensure modules are reloaded when coverage.py is looking.
 #       This means we want to avoid importing module members when
 #       using these modules, to ensure they get reloaded as well.
-reload(pytest_codecov)
-reload(pytest_codecov.codecov)
+importlib.reload(pytest_codecov)
+importlib.reload(pytest_codecov.codecov)
