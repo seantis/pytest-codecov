@@ -140,7 +140,7 @@ class CodecovUploader:
             return
 
         json_payload = json.dumps({
-            'test_result_files': self._test_result_files
+            'test_results_files': self._test_result_files
         }).encode('ascii')
         # TODO: Fail more loudly?
         requests.put(self._test_result_store_url, data=json_payload)
