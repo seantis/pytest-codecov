@@ -15,7 +15,7 @@ def test_init():
 
 def test_write_network_files():
     uploader = CodecovUploader('seantis/pytest-codecov')
-    uploader.write_network_files(['foo.py'])
+    uploader.add_network_files(['foo.py'])
     assert uploader.get_payload() == (
         'foo.py\n'
         '<<<<<< network'
@@ -24,7 +24,7 @@ def test_write_network_files():
 
 def test_add_coverage_report(dummy_cov):
     uploader = CodecovUploader('seantis/pytest-codecov')
-    uploader.write_network_files(['foo.py'])
+    uploader.add_network_files(['foo.py'])
     uploader.add_coverage_report(dummy_cov)
     assert uploader.get_payload() == (
         'foo.py\n'
@@ -55,9 +55,25 @@ def test_ping(dummy_cov, mock_requests):
 
     mock_requests.set_response(f'codecov.io\n{uploader.storage_endpoint}')
     uploader.ping()
-    assert uploader.store_url == uploader.storage_endpoint
+    assert uploader._coverage_store_url == uploader.storage_endpoint
+    assert uploader._test_result_store_url is None
 
     # TODO: Verify correct url/headers/params
+
+
+def test_ping_junit(dummy_cov, mock_requests, tmp_path):
+    junit_xml = tmp_path / 'junit.xml'
+    junit_xml.write_text('foo')
+    uploader = CodecovUploader('seantis/pytest-codecov')
+    uploader.add_junit_xml(str(junit_xml))
+
+    mock_requests.set_responses(
+        f'codecov.io\n{uploader.storage_endpoint}',
+        f'{{"raw_upload_location":"{uploader.storage_endpoint}"}}'
+    )
+    uploader.ping()
+    assert uploader._coverage_store_url == uploader.storage_endpoint
+    assert uploader._test_result_store_url == uploader.storage_endpoint
 
 
 def test_ping_no_slug(dummy_cov, mock_requests):
@@ -80,6 +96,27 @@ def test_upload(dummy_cov, mock_requests):
 
     mock_requests.set_response('')
     uploader.upload()
-    assert uploader.store_url is None
+    assert uploader._coverage_store_url is None
+    assert uploader._test_result_store_url is None
+
+    # TODO: Verify correct url/headers/params
+
+
+def test_upload_junit(dummy_cov, mock_requests, tmp_path):
+    junit_xml = tmp_path / 'junit.xml'
+    junit_xml.write_text('foo')
+    uploader = CodecovUploader('seantis/pytest-codecov')
+    uploader.add_junit_xml(str(junit_xml))
+
+    mock_requests.set_responses(
+        f'codecov.io\n{uploader.storage_endpoint}',
+        f'{{"raw_upload_location":"{uploader.storage_endpoint}"}}'
+    )
+    uploader.ping()
+
+    mock_requests.set_response('')
+    uploader.upload()
+    assert uploader._coverage_store_url is None
+    assert uploader._test_result_store_url is None
 
     # TODO: Verify correct url/headers/params

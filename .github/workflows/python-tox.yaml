@@ -39,4 +39,4 @@ jobs:
           pip install tox tox-gh-actions
 
       - name: Test with tox and upload coverage results
-        run: tox -- --codecov --codecov-token=${{ secrets.CODECOV_TOKEN }}
+        run: tox -- --codecov --codecov-token=${{ secrets.CODECOV_TOKEN }} --junit-xml=junit.xml -o junit_family=legacy

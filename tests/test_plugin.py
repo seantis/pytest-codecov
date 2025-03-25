@@ -113,6 +113,98 @@ def test_upload_report(pytester, dummy_reporter, dummy_uploader,
     ) in dummy_reporter.text
 
 
+def test_upload_report_junit(pytester, dummy_reporter, dummy_uploader,
+                             dummy_cov, no_gitpython, tmp_path):
+
+    # create a junit xml
+    junit_xml = tmp_path / 'junit.xml'
+    junit_xml.write_text('foo')
+    config = pytester.parseconfig(
+        f'--junit-xml={junit_xml}',
+        '-o',
+        'junit_family=legacy',
+        '--codecov',
+        '--codecov-token=12345678-1234-1234-1234-1234567890ab',
+        '--codecov-slug=foo/bar',
+        '--codecov-branch=master',
+        '--codecov-commit=deadbeef'
+    )
+    plugin = CodecovPlugin()
+    plugin.upload_report(dummy_reporter, config, dummy_cov)
+    assert (
+        'Environment:\n'
+        'Slug:   foo/bar\n'
+        'Branch: master\n'
+        'Commit: deadbeef\n'
+        '\n'
+        'JUnit XML file detected and included in upload.\n'
+    ) in dummy_reporter.text
+    assert (
+        'INFO: We recommend using junit_family=legacy with Codecov.'
+    ) not in dummy_reporter.text
+    assert dummy_uploader.junit_xml == str(junit_xml)
+
+
+def test_upload_report_junit_info(pytester, dummy_reporter, dummy_uploader,
+                                  dummy_cov, no_gitpython, tmp_path):
+
+    # create a junit xml
+    junit_xml = tmp_path / 'junit.xml'
+    junit_xml.write_text('foo')
+    config = pytester.parseconfig(
+        f'--junit-xml={junit_xml}',
+        '--codecov',
+        '--codecov-token=12345678-1234-1234-1234-1234567890ab',
+        '--codecov-slug=foo/bar',
+        '--codecov-branch=master',
+        '--codecov-commit=deadbeef'
+    )
+    plugin = CodecovPlugin()
+    plugin.upload_report(dummy_reporter, config, dummy_cov)
+    assert (
+        'INFO: We recommend using junit_family=legacy with Codecov.\n'
+        'Environment:\n'
+        'Slug:   foo/bar\n'
+        'Branch: master\n'
+        'Commit: deadbeef\n'
+        '\n'
+        'JUnit XML file detected and included in upload.\n'
+    ) in dummy_reporter.text
+    assert dummy_uploader.junit_xml == str(junit_xml)
+
+
+def test_no_upload_report_junit(pytester, dummy_reporter, dummy_uploader,
+                                dummy_cov, no_gitpython, tmp_path):
+
+    # create a junit xml
+    junit_xml = tmp_path / 'junit.xml'
+    junit_xml.write_text('foo')
+    config = pytester.parseconfig(
+        f'--junit-xml={junit_xml}',
+        '--codecov',
+        '--codecov-token=12345678-1234-1234-1234-1234567890ab',
+        '--codecov-slug=foo/bar',
+        '--codecov-branch=master',
+        '--codecov-commit=deadbeef',
+        '--codecov-exclude-junit-xml'
+    )
+    plugin = CodecovPlugin()
+    plugin.upload_report(dummy_reporter, config, dummy_cov)
+    assert (
+        'Environment:\n'
+        'Slug:   foo/bar\n'
+        'Branch: master\n'
+        'Commit: deadbeef\n'
+    ) in dummy_reporter.text
+    assert (
+        'JUnit XML file detected and included in upload.'
+    ) not in dummy_reporter.text
+    assert (
+        'INFO: We recommend using junit_family=legacy with Codecov.'
+    ) not in dummy_reporter.text
+    assert dummy_uploader.junit_xml is None
+
+
 def test_upload_report_generation_failure(
     pytester, dummy_reporter, dummy_uploader,
     dummy_cov, no_gitpython
