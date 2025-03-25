@@ -104,7 +104,7 @@ class CodecovPlugin:
             branch=option.codecov_branch,
             token=option.codecov_token,
         )
-        uploader.write_network_files(git.ls_files())
+        uploader.add_network_files(git.ls_files())
         from coverage.misc import CoverageException
         try:
             uploader.add_coverage_report(cov)
@@ -155,7 +155,7 @@ class CodecovPlugin:
             )
         if has_junit_xml and config.getini('junit_family') != 'legacy':
             terminalreporter.write_line(
-                'INFO: We recommend using junit_family=legacy with CodeCov.',
+                'INFO: We recommend using junit_family=legacy with Codecov.',
                 blue=True,
                 bold=True,
             )

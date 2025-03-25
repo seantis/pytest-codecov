@@ -15,7 +15,7 @@ def test_init():
 
 def test_write_network_files():
     uploader = CodecovUploader('seantis/pytest-codecov')
-    uploader.write_network_files(['foo.py'])
+    uploader.add_network_files(['foo.py'])
     assert uploader.get_payload() == (
         'foo.py\n'
         '<<<<<< network'
@@ -24,7 +24,7 @@ def test_write_network_files():
 
 def test_add_coverage_report(dummy_cov):
     uploader = CodecovUploader('seantis/pytest-codecov')
-    uploader.write_network_files(['foo.py'])
+    uploader.add_network_files(['foo.py'])
     uploader.add_coverage_report(dummy_cov)
     assert uploader.get_payload() == (
         'foo.py\n'
@@ -55,7 +55,7 @@ def test_ping(dummy_cov, mock_requests):
 
     mock_requests.set_response(f'codecov.io\n{uploader.storage_endpoint}')
     uploader.ping()
-    assert uploader.store_url == uploader.storage_endpoint
+    assert uploader._coverage_store_url == uploader.storage_endpoint
 
     # TODO: Verify correct url/headers/params
 
@@ -80,6 +80,6 @@ def test_upload(dummy_cov, mock_requests):
 
     mock_requests.set_response('')
     uploader.upload()
-    assert uploader.store_url is None
+    assert uploader._coverage_store_url is None
 
     # TODO: Verify correct url/headers/params

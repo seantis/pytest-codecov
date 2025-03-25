@@ -116,7 +116,7 @@ class DummyUploader:
     def __init__(self, factory, slug, **kwargs):
         self.factory = factory
 
-    def write_network_files(self, files):
+    def add_network_files(self, files):
         pass
 
     def add_coverage_report(self, cov, **kwargs):

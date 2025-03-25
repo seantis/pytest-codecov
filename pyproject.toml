@@ -83,11 +83,14 @@ legacy_tox_ini = """
     [testenv]
     setenv =
         py{38,39,310,311,312,313}: COVERAGE_FILE = .coverage.{envname}
-    commands = pytest --cov --cov-report= {posargs:tests}
+    commands =
+        pytest --cov --cov-report= {posargs:tests}
+        pytest -n2 --cov --cov-report= {posargs:tests}
     deps =
         pytest
         coverage
         pytest-cov
+        pytest-xdist
         .
         GitPython
 

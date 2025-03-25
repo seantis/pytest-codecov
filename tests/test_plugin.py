@@ -140,7 +140,7 @@ def test_upload_report_junit(pytester, dummy_reporter, dummy_uploader,
         'JUnit XML file detected and included in upload.\n'
     ) in dummy_reporter.text
     assert (
-        'INFO: We recommend using junit_family=legacy with CodeCov.'
+        'INFO: We recommend using junit_family=legacy with Codecov.'
     ) not in dummy_reporter.text
     assert dummy_uploader.junit_xml == str(junit_xml)
 
@@ -162,7 +162,7 @@ def test_upload_report_junit_info(pytester, dummy_reporter, dummy_uploader,
     plugin = CodecovPlugin()
     plugin.upload_report(dummy_reporter, config, dummy_cov)
     assert (
-        'INFO: We recommend using junit_family=legacy with CodeCov.\n'
+        'INFO: We recommend using junit_family=legacy with Codecov.\n'
         'Environment:\n'
         'Slug:   foo/bar\n'
         'Branch: master\n'
@@ -200,7 +200,7 @@ def test_no_upload_report_junit(pytester, dummy_reporter, dummy_uploader,
         'JUnit XML file detected and included in upload.'
     ) not in dummy_reporter.text
     assert (
-        'INFO: We recommend using junit_family=legacy with CodeCov.'
+        'INFO: We recommend using junit_family=legacy with Codecov.'
     ) not in dummy_reporter.text
     assert dummy_uploader.junit_xml is None
 
