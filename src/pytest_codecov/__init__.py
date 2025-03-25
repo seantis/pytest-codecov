@@ -85,16 +85,24 @@ def pytest_addoption(parser, pluginmanager):
         default=True,
         help='Don\'t upload coverage results on test failure'
     )
+    group.addoption(
+        '--codecov-exclude-junit-xml',
+        action='store_false',
+        dest='codecov_junit_xml',
+        default=True,
+        help='Don\'t upload the junit xml file'
+    )
 
 
 class CodecovPlugin:
 
     def upload_report(self, terminalreporter, config, cov):
+        option = config.option
         uploader = codecov.CodecovUploader(
-            config.option.codecov_slug,
-            commit=config.option.codecov_commit,
-            branch=config.option.codecov_branch,
-            token=config.option.codecov_token,
+            option.codecov_slug,
+            commit=option.codecov_commit,
+            branch=option.codecov_branch,
+            token=option.codecov_token,
         )
         uploader.write_network_files(git.ls_files())
         from coverage.misc import CoverageException
@@ -110,14 +118,21 @@ class CodecovPlugin:
             terminalreporter.line('')
             return
 
-        if config.option.codecov_dump:
+        xmlpath = option.xmlpath if option.codecov_junit_xml else None
+        if xmlpath and os.path.isfile(xmlpath):
+            uploader.add_junit_xml(xmlpath)
+            has_junit_xml = True
+        else:
+            has_junit_xml = False
+
+        if option.codecov_dump:
             terminalreporter.section('Prepared Codecov.io payload')
             terminalreporter.write_line(uploader.get_payload())
             return
 
         terminalreporter.section('Codecov.io upload')
 
-        if not config.option.codecov_slug:
+        if not option.codecov_slug:
             terminalreporter.write_line(
                 'ERROR: Failed to determine git repository slug. '
                 'Cannot upload without a valid slug.',
@@ -126,24 +141,35 @@ class CodecovPlugin:
             )
             terminalreporter.line('')
             return
-        if not config.option.codecov_branch:
+        if not option.codecov_branch:
             terminalreporter.write_line(
                 'WARNING: Failed to determine git repository branch.',
                 yellow=True,
                 bold=True,
             )
-        if not config.option.codecov_commit:
+        if not option.codecov_commit:
             terminalreporter.write_line(
                 'WARNING: Failed to determine git commit.',
                 yellow=True,
                 bold=True,
             )
+        if has_junit_xml and config.getini('junit_family') != 'legacy':
+            terminalreporter.write_line(
+                'INFO: We recommend using junit_family=legacy with CodeCov.',
+                blue=True,
+                bold=True,
+            )
+
         terminalreporter.write_line(
             'Environment:\n'
-            f'Slug:   {config.option.codecov_slug}\n'
-            f'Branch: {config.option.codecov_branch}\n'
-            f'Commit: {config.option.codecov_commit}\n'
+            f'Slug:   {option.codecov_slug}\n'
+            f'Branch: {option.codecov_branch}\n'
+            f'Commit: {option.codecov_commit}\n'
         )
+        if has_junit_xml:
+            terminalreporter.write_line(
+                'JUnit XML file detected and included in upload.\n'
+            )
         try:
             terminalreporter.write_line('Pinging codecov API...')
             uploader.ping()
@@ -178,6 +204,10 @@ class CodecovPlugin:
 
 
 def pytest_configure(config):  # pragma: no cover
+    # NOTE: Don't report codecov results on worker nodes
+    if hasattr(config, 'workerinput'):
+        return
+
     # NOTE: if cov is missing we fail silently
     if config.option.codecov and config.pluginmanager.has_plugin('_cov'):
         config.pluginmanager.register(CodecovPlugin())

@@ -113,15 +113,18 @@ class DummyUploader:
     # TODO: Implement some basic behavior, so we can test
     #       more exhaustively.
 
-    def __init__(self, slug, **kwargs):
-        self.fail_report_generation = False
+    def __init__(self, factory, slug, **kwargs):
+        self.factory = factory
 
     def write_network_files(self, files):
         pass
 
     def add_coverage_report(self, cov, **kwargs):
-        if self.fail_report_generation:
+        if self.factory.fail_report_generation:
             raise CoverageException('test exception')
+
+    def add_junit_xml(self, path):
+        self.factory.junit_xml = path
 
     def get_payload(self):
         return 'stub'
@@ -135,12 +138,15 @@ class DummyUploader:
 
 class DummyUploaderFactory:
 
-    fail_report_generation = False
+    def __init__(self):
+        self.fail_report_generation = False
+        self.junit_xml = None
 
     def __call__(self, slug, **kwargs):
-        inst = DummyUploader(slug, **kwargs)
-        inst.fail_report_generation = self.fail_report_generation
-        return inst
+        return DummyUploader(self, slug, **kwargs)
+
+    def clear(self):
+        self.junit_xml = None
 
 
 @pytest.fixture

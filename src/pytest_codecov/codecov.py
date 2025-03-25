@@ -40,6 +40,12 @@ class CodecovUploader:
             self._buffer.write(xml_report.read())
             self._buffer.write('\n<<<<<< EOF')
 
+    def add_junit_xml(self, path):
+        with open(path, 'r') as junit_xml:
+            self._buffer.write('\n# path=./junit.xml\n')
+            self._buffer.write(junit_xml.read())
+            self._buffer.write('\n<<<<<< EOF')
+
     def get_payload(self):
         return self._buffer.getvalue()
 
