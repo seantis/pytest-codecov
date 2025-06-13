@@ -1,10 +1,20 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
 from pytest_codecov.codecov import CodecovError
 from pytest_codecov.codecov import CodecovUploader
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
-def test_init():
+    from tests.conftest import DummyCoverage
+    from tests.conftest import MockRequests
+
+
+def test_init() -> None:
     uploader = CodecovUploader('seantis/pytest-codecov')
     assert uploader.slug == 'seantis/pytest-codecov'
     assert uploader.commit is None
@@ -13,7 +23,7 @@ def test_init():
     assert uploader.get_payload() == ''
 
 
-def test_write_network_files():
+def test_write_network_files() -> None:
     uploader = CodecovUploader('seantis/pytest-codecov')
     uploader.add_network_files(['foo.py'])
     assert uploader.get_payload() == (
@@ -22,7 +32,7 @@ def test_write_network_files():
     )
 
 
-def test_add_coverage_report(dummy_cov):
+def test_add_coverage_report(dummy_cov: DummyCoverage) -> None:
     uploader = CodecovUploader('seantis/pytest-codecov')
     uploader.add_network_files(['foo.py'])
     uploader.add_coverage_report(dummy_cov)
@@ -47,7 +57,7 @@ def test_add_coverage_report(dummy_cov):
     )
 
 
-def test_ping(dummy_cov, mock_requests):
+def test_ping(dummy_cov: DummyCoverage, mock_requests: MockRequests) -> None:
     mock_requests.set_response('Invalid response')
     uploader = CodecovUploader('seantis/pytest-codecov')
     with pytest.raises(CodecovError, match=r'Invalid response'):
@@ -61,7 +71,12 @@ def test_ping(dummy_cov, mock_requests):
     # TODO: Verify correct url/headers/params
 
 
-def test_ping_junit(dummy_cov, mock_requests, tmp_path):
+def test_ping_junit(
+    dummy_cov: DummyCoverage,
+    mock_requests: MockRequests,
+    tmp_path: Path
+) -> None:
+
     junit_xml = tmp_path / 'junit.xml'
     junit_xml.write_text('foo')
     uploader = CodecovUploader('seantis/pytest-codecov')
@@ -76,13 +91,20 @@ def test_ping_junit(dummy_cov, mock_requests, tmp_path):
     assert uploader._test_result_store_url == uploader.storage_endpoint
 
 
-def test_ping_no_slug(dummy_cov, mock_requests):
-    uploader = CodecovUploader(None)
+def test_ping_no_slug(
+    dummy_cov: DummyCoverage,
+    mock_requests: MockRequests
+) -> None:
+    uploader = CodecovUploader('')
     with pytest.raises(CodecovError, match=r'valid slug'):
         uploader.ping()
 
 
-def test_upload(dummy_cov, mock_requests):
+def test_upload(
+    dummy_cov: DummyCoverage,
+    mock_requests: MockRequests
+) -> None:
+
     uploader = CodecovUploader('seantis/pytest-codecov')
     with pytest.raises(CodecovError, match=r'Need to ping API before upload'):
         uploader.upload()
@@ -102,7 +124,12 @@ def test_upload(dummy_cov, mock_requests):
     # TODO: Verify correct url/headers/params
 
 
-def test_upload_junit(dummy_cov, mock_requests, tmp_path):
+def test_upload_junit(
+    dummy_cov: DummyCoverage,
+    mock_requests: MockRequests,
+    tmp_path: Path
+) -> None:
+
     junit_xml = tmp_path / 'junit.xml'
     junit_xml.write_text('foo')
     uploader = CodecovUploader('seantis/pytest-codecov')

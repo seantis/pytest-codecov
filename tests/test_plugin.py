@@ -1,10 +1,24 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
-from pytest import UsageError
 from pytest_codecov import CodecovPlugin
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
-def test_options(pytester, no_gitpython):
+    from tests.conftest import DummyCoverage
+    from tests.conftest import DummyReporter
+    from tests.conftest import DummyUploaderFactory
+
+
+def test_options(
+    pytester: pytest.Pytester,
+    no_gitpython: None
+) -> None:
+
     config = pytester.parseconfig('')
     assert config.option.codecov is False
     assert config.option.codecov_token is None
@@ -43,18 +57,32 @@ def test_options(pytester, no_gitpython):
     assert config.option.codecov_upload_on_failure is False
 
 
-def test_options_invalid_token(pytester, no_gitpython):
-    with pytest.raises(UsageError, match=r'Invalid.* token'):
+def test_options_invalid_token(
+    pytester: pytest.Pytester,
+    no_gitpython: None
+) -> None:
+
+    with pytest.raises(pytest.UsageError, match=r'Invalid.* token'):
         pytester.parseconfig('--codecov', '--codecov-token=invalid')
 
 
-def test_options_invalid_slug(pytester, no_gitpython):
-    with pytest.raises(UsageError, match=r'Invalid.* slug'):
+def test_options_invalid_slug(
+    pytester: pytest.Pytester,
+    no_gitpython: None
+) -> None:
+
+    with pytest.raises(pytest.UsageError, match=r'Invalid.* slug'):
         pytester.parseconfig('--codecov', '--codecov-slug=invalid')
 
 
-def test_upload_report_no_slug(pytester, dummy_reporter, dummy_uploader,
-                               dummy_cov, no_gitpython):
+def test_upload_report_no_slug(
+    pytester: pytest.Pytester,
+    dummy_reporter: DummyReporter,
+    dummy_uploader: DummyUploaderFactory,
+    dummy_cov: DummyCoverage,
+    no_gitpython: None
+) -> None:
+
     config = pytester.parseconfig('--codecov')
     plugin = CodecovPlugin()
     plugin.upload_report(dummy_reporter, config, dummy_cov)
@@ -62,8 +90,14 @@ def test_upload_report_no_slug(pytester, dummy_reporter, dummy_uploader,
     assert 'Failed to determine git repository slug.' in dummy_reporter.text
 
 
-def test_upload_report_no_branch(pytester, dummy_reporter, dummy_uploader,
-                                 dummy_cov, no_gitpython):
+def test_upload_report_no_branch(
+    pytester: pytest.Pytester,
+    dummy_reporter: DummyReporter,
+    dummy_uploader: DummyUploaderFactory,
+    dummy_cov: DummyCoverage,
+    no_gitpython: None
+) -> None:
+
     config = pytester.parseconfig(
         '--codecov',
         '--codecov-slug=foo/bar',
@@ -74,8 +108,14 @@ def test_upload_report_no_branch(pytester, dummy_reporter, dummy_uploader,
     assert 'Failed to determine git repository branch.' in dummy_reporter.text
 
 
-def test_upload_report_no_commit(pytester, dummy_reporter, dummy_uploader,
-                                 dummy_cov, no_gitpython):
+def test_upload_report_no_commit(
+    pytester: pytest.Pytester,
+    dummy_reporter: DummyReporter,
+    dummy_uploader: DummyUploaderFactory,
+    dummy_cov: DummyCoverage,
+    no_gitpython: None
+) -> None:
+
     config = pytester.parseconfig(
         '--codecov',
         '--codecov-slug=foo/bar',
@@ -86,16 +126,28 @@ def test_upload_report_no_commit(pytester, dummy_reporter, dummy_uploader,
     assert 'Failed to determine git commit.' in dummy_reporter.text
 
 
-def test_upload_report_dump(pytester, dummy_reporter, dummy_uploader,
-                            dummy_cov, no_gitpython):
+def test_upload_report_dump(
+    pytester: pytest.Pytester,
+    dummy_reporter: DummyReporter,
+    dummy_uploader: DummyUploaderFactory,
+    dummy_cov: DummyCoverage,
+    no_gitpython: None
+) -> None:
+
     config = pytester.parseconfig('--codecov', '--codecov-dump')
     plugin = CodecovPlugin()
     plugin.upload_report(dummy_reporter, config, dummy_cov)
     assert 'Prepared Codecov.io payload' in dummy_reporter.text
 
 
-def test_upload_report(pytester, dummy_reporter, dummy_uploader,
-                       dummy_cov, no_gitpython):
+def test_upload_report(
+    pytester: pytest.Pytester,
+    dummy_reporter: DummyReporter,
+    dummy_uploader: DummyUploaderFactory,
+    dummy_cov: DummyCoverage,
+    no_gitpython: None
+) -> None:
+
     config = pytester.parseconfig(
         '--codecov',
         '--codecov-token=12345678-1234-1234-1234-1234567890ab',
@@ -113,8 +165,14 @@ def test_upload_report(pytester, dummy_reporter, dummy_uploader,
     ) in dummy_reporter.text
 
 
-def test_upload_report_junit(pytester, dummy_reporter, dummy_uploader,
-                             dummy_cov, no_gitpython, tmp_path):
+def test_upload_report_junit(
+    pytester: pytest.Pytester,
+    dummy_reporter: DummyReporter,
+    dummy_uploader: DummyUploaderFactory,
+    dummy_cov: DummyCoverage,
+    no_gitpython: None,
+    tmp_path: Path
+) -> None:
 
     # create a junit xml
     junit_xml = tmp_path / 'junit.xml'
@@ -145,8 +203,14 @@ def test_upload_report_junit(pytester, dummy_reporter, dummy_uploader,
     assert dummy_uploader.junit_xml == str(junit_xml)
 
 
-def test_upload_report_junit_info(pytester, dummy_reporter, dummy_uploader,
-                                  dummy_cov, no_gitpython, tmp_path):
+def test_upload_report_junit_info(
+    pytester: pytest.Pytester,
+    dummy_reporter: DummyReporter,
+    dummy_uploader: DummyUploaderFactory,
+    dummy_cov: DummyCoverage,
+    no_gitpython: None,
+    tmp_path: Path
+) -> None:
 
     # create a junit xml
     junit_xml = tmp_path / 'junit.xml'
@@ -173,8 +237,14 @@ def test_upload_report_junit_info(pytester, dummy_reporter, dummy_uploader,
     assert dummy_uploader.junit_xml == str(junit_xml)
 
 
-def test_no_upload_report_junit(pytester, dummy_reporter, dummy_uploader,
-                                dummy_cov, no_gitpython, tmp_path):
+def test_no_upload_report_junit(
+    pytester: pytest.Pytester,
+    dummy_reporter: DummyReporter,
+    dummy_uploader: DummyUploaderFactory,
+    dummy_cov: DummyCoverage,
+    no_gitpython: None,
+    tmp_path: Path
+) -> None:
 
     # create a junit xml
     junit_xml = tmp_path / 'junit.xml'
@@ -206,9 +276,13 @@ def test_no_upload_report_junit(pytester, dummy_reporter, dummy_uploader,
 
 
 def test_upload_report_generation_failure(
-    pytester, dummy_reporter, dummy_uploader,
-    dummy_cov, no_gitpython
-):
+    pytester: pytest.Pytester,
+    dummy_reporter: DummyReporter,
+    dummy_uploader: DummyUploaderFactory,
+    dummy_cov: DummyCoverage,
+    no_gitpython: None
+) -> None:
+
     dummy_uploader.fail_report_generation = True
     config = pytester.parseconfig(
         '--codecov',

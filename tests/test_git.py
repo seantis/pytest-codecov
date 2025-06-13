@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 import git
 import os
 
+import pytest
 
-def test_no_repository(pytester):
+
+def test_no_repository(pytester: pytest.Pytester) -> None:
 
     pytester.makepyfile(
         """
@@ -22,7 +26,7 @@ def test_no_repository(pytester):
     result.assert_outcomes(passed=1)
 
 
-def test_slug(pytester):
+def test_slug(pytester: pytest.Pytester) -> None:
     repo = git.Repo.init(pytester.path)
     repo.create_remote('origin', 'git@example.com:foo/bar.git')
 
@@ -45,7 +49,7 @@ def test_slug(pytester):
     result.assert_outcomes(passed=1)
 
 
-def test_slug_https(pytester):
+def test_slug_https(pytester: pytest.Pytester) -> None:
     repo = git.Repo.init(pytester.path)
     repo.create_remote('origin', 'https://example.com/foo/bar')
 
@@ -68,7 +72,7 @@ def test_slug_https(pytester):
     result.assert_outcomes(passed=1)
 
 
-def test_branch(pytester):
+def test_branch(pytester: pytest.Pytester) -> None:
     repo = git.Repo.init(pytester.path)
     repo.create_remote('origin', 'git@example.com:foo/bar.git')
 
@@ -87,13 +91,13 @@ def test_branch(pytester):
     repo.index.add(os.path.join(pytester.path, 'test_branch.py'))
     repo.index.commit('Initial commit')
     new_branch = repo.create_head('foo', 'HEAD')
-    repo.head.reference = new_branch
+    repo.head.set_reference(new_branch)
 
     result = pytester.runpytest()
     result.assert_outcomes(passed=1)
 
 
-def test_branch_detached(pytester):
+def test_branch_detached(pytester: pytest.Pytester) -> None:
     repo = git.Repo.init(pytester.path)
     repo.create_remote('origin', 'git@example.com:foo/bar.git')
 
@@ -111,13 +115,13 @@ def test_branch_detached(pytester):
 
     repo.index.add(os.path.join(pytester.path, 'test_branch_detached.py'))
     repo.index.commit('Initial commit')
-    repo.head.reference = repo.commit('HEAD')
+    repo.head.set_reference(repo.commit('HEAD'))
 
     result = pytester.runpytest()
     result.assert_outcomes(passed=1)
 
 
-def test_commit(pytester):
+def test_commit(pytester: pytest.Pytester) -> None:
     repo = git.Repo.init(pytester.path)
     repo.create_remote('origin', 'git@example.com:foo/bar.git')
 

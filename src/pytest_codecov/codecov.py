@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import gzip
 import io
 import json
@@ -5,10 +7,16 @@ import requests
 import tempfile
 import zlib
 from base64 import b64encode
+from typing import Any
+from typing import TYPE_CHECKING
 from urllib.parse import urljoin
 
+if TYPE_CHECKING:
+    from _typeshed import StrOrBytesPath
+    from coverage import Coverage
 
-def package():
+
+def package() -> str:
     from pytest_codecov import __version__ as version
     return f'pytest_codecov-{version}'
 
@@ -21,22 +29,33 @@ class CodecovUploader:
     api_endpoint = 'https://codecov.io'
     storage_endpoint = 'https://storage.googleapis.com/codecov-production/'
 
-    def __init__(self, slug, commit=None, branch=None, token=None):
+    def __init__(
+        self,
+        slug: str,
+        commit: str | None = None,
+        branch: str | None = None,
+        token: str | None = None
+    ) -> None:
         self.slug = slug
         self.commit = commit
         self.branch = branch
         self.token = token
-        self._coverage_store_url = None
+        self._coverage_store_url: str | None = None
         self._coverage_buffer = io.StringIO()
-        self._test_result_store_url = None
-        self._test_result_files = []
+        self._test_result_store_url: str | None = None
+        self._test_result_files: list[dict[str, Any]] = []
 
-    def add_network_files(self, files):
-        self._coverage_buffer.write(
-            '\n'.join(files + ['<<<<<< network'])
-        )
+    def add_network_files(self, files: list[str]) -> None:
+        self._coverage_buffer.write('\n'.join(files))
+        if files:
+            self._coverage_buffer.write('\n')
+        self._coverage_buffer.write('<<<<<< network')
 
-    def add_coverage_report(self, cov, filename='coverage.xml', **kwargs):
+    def add_coverage_report(
+        self,
+        cov: Coverage,
+        filename: str = 'coverage.xml',
+    ) -> None:
         with tempfile.NamedTemporaryFile(mode='r') as xml_report:
             # embed xml report
             self._coverage_buffer.write(f'\n# path=./{filename}\n')
@@ -45,7 +64,11 @@ class CodecovUploader:
             self._coverage_buffer.write(xml_report.read())
             self._coverage_buffer.write('\n<<<<<< EOF')
 
-    def add_junit_xml(self, path, filename='junit.xml'):
+    def add_junit_xml(
+        self,
+        path: StrOrBytesPath,
+        filename: str = 'junit.xml'
+    ) -> None:
         with open(path, 'rb') as junit_xml:
             self._test_result_files.append({
                 'filename': filename,
@@ -56,10 +79,10 @@ class CodecovUploader:
                 'labels': '',
             })
 
-    def get_payload(self):
+    def get_payload(self) -> str:
         return self._coverage_buffer.getvalue()
 
-    def ping(self):
+    def ping(self) -> None:
         if not self.slug:
             raise CodecovError(
                 'Failed to determine git repository slug. '
@@ -87,7 +110,12 @@ class CodecovUploader:
             'job': '',
             'cmd_args': '',
         }
-        response = requests.post(api_url, headers=headers, params=params)
+        response = requests.post(
+            api_url,
+            headers=headers,
+            params=params,
+            timeout=(5, 10)
+        )
         lines = response.text.splitlines()
         if len(lines) != 2 or not lines[1].startswith(self.storage_endpoint):
             raise CodecovError(
@@ -108,14 +136,19 @@ class CodecovUploader:
             'commit': self.commit or '',
         }
         api_url = urljoin(self.api_endpoint, '/upload/test_results/v1')
-        response = requests.post(api_url, headers=headers, json=data)
+        response = requests.post(
+            api_url,
+            headers=headers,
+            json=data,
+            timeout=(5, 10)
+        )
         if response.ok:
             # TODO: Fail more loudly?
             url = response.json()['raw_upload_location']
             if url.startswith(self.storage_endpoint):
                 self._test_result_store_url = url
 
-    def upload(self):
+    def upload(self) -> None:
         if not self._coverage_store_url:
             raise CodecovError('Need to ping API before upload.')
 
@@ -128,7 +161,10 @@ class CodecovUploader:
             payload.write(self.get_payload().encode('utf-8'))
         gz_payload.seek(0)
         response = requests.put(
-            self._coverage_store_url, headers=headers, data=gz_payload
+            self._coverage_store_url,
+            headers=headers,
+            data=gz_payload,
+            timeout=(5, 10)
         )
 
         if not response.ok:
@@ -143,5 +179,9 @@ class CodecovUploader:
             'test_results_files': self._test_result_files
         }).encode('ascii')
         # TODO: Fail more loudly?
-        requests.put(self._test_result_store_url, data=json_payload)
+        requests.put(
+            self._test_result_store_url,
+            data=json_payload,
+            timeout=(5, 10)
+        )
         self._test_result_store_url = None

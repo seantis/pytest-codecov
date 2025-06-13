@@ -1,0 +1,40 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '^(.bumpversion.cfg)$'
+      - id: mixed-line-ending
+      - id: check-merge-conflict
+      - id: check-ast
+      - id: debug-statements
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-markup
+    rev: v1.0.1
+    hooks:
+      - id: rst-linter
+        files: '^[A-Z]+\.rst$'
+  - repo: https://github.com/seantis/pre-commit-hooks
+    rev: v1.1.0
+    hooks:
+      - id: nocheckin
+        exclude: .pre-commit-config.yaml
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.13
+    hooks:
+      - id: ruff
+        args: [ "--fix" ]
+        files: '^(src|tests)/.*\.py$'
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.16.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - GitPython
+          - pytest
+          - pytest-cov
+          - types-requests
+        exclude: '.*'
+        always_run: true
+        pass_filenames: false
+        args: ["-p", "pytest_codecov", "-p", "tests"]
+

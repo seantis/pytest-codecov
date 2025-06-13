@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import pathlib
 import re
@@ -29,7 +31,7 @@ _exlude_extension = (
 )
 
 
-def os_ls_files():
+def os_ls_files() -> list[str]:
     basedir = os.getcwd()
     paths = []
     for path in pathlib.Path(basedir).glob('**/*'):
@@ -38,10 +40,10 @@ def os_ls_files():
         if path.suffix in _exlude_extension:
             continue
 
-        _path = str(path)
-        if _exclude_pattern.search(_path):
+        str_path = str(path)
+        if _exclude_pattern.search(str_path):
             continue
-        paths.append(os.path.relpath(_path, basedir))
+        paths.append(os.path.relpath(str_path, basedir))
     return paths
 
 
@@ -63,10 +65,11 @@ try:
         if len(_parts) >= 2:
             slug = '/'.join(_parts[-2:])
 
-    def _git_ls_files():
+    def _git_ls_files() -> list[str]:
         repo = git.Repo(search_parent_directories=True)
         return [
-            e.path for e in repo.head.commit.tree.traverse()
+            e.path  # type: ignore[attr-defined]
+            for e in repo.head.commit.tree.traverse()
             if not hasattr(e, 'blobs')
         ]
 

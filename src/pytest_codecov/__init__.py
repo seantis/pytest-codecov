@@ -1,10 +1,17 @@
+from __future__ import annotations
+
 import argparse
 import os
 import pytest
 import re
+from typing import TYPE_CHECKING
 
 import pytest_codecov.git as git
 import pytest_codecov.codecov as codecov
+
+if TYPE_CHECKING:
+    from coverage import Coverage
+    from pytest_cov.plugin import CovPlugin  # type: ignore[import-untyped]
 
 
 __version__ = '0.7.0'
@@ -16,21 +23,24 @@ slug_regex = re.compile(
 )
 
 
-def validate_token(arg):
+def validate_token(arg: str) -> str:
     if not token_regex.match(arg):
         msg = 'Invalid Codecov.io repository token supplied.'
         raise argparse.ArgumentTypeError(msg)
     return arg
 
 
-def validate_slug(arg):
+def validate_slug(arg: str) -> str:
     if not slug_regex.match(arg):
         msg = 'Invalid repository slug supplied.'
         raise argparse.ArgumentTypeError(msg)
     return arg
 
 
-def pytest_addoption(parser, pluginmanager):
+def pytest_addoption(
+    parser: pytest.Parser,
+    pluginmanager: pytest.PytestPluginManager
+) -> None:
     group = parser.getgroup('codecov')
     group.addoption(
         '--codecov',
@@ -83,20 +93,25 @@ def pytest_addoption(parser, pluginmanager):
         action='store_false',
         dest='codecov_upload_on_failure',
         default=True,
-        help='Don\'t upload coverage results on test failure'
+        help="Don't upload coverage results on test failure"
     )
     group.addoption(
         '--codecov-exclude-junit-xml',
         action='store_false',
         dest='codecov_junit_xml',
         default=True,
-        help='Don\'t upload the junit xml file'
+        help="Don't upload the junit xml file"
     )
 
 
 class CodecovPlugin:
 
-    def upload_report(self, terminalreporter, config, cov):
+    def upload_report(
+        self,
+        terminalreporter: pytest.TerminalReporter,
+        config: pytest.Config,
+        cov: Coverage
+    ) -> None:
         option = config.option
         uploader = codecov.CodecovUploader(
             option.codecov_slug,
@@ -105,7 +120,7 @@ class CodecovPlugin:
             token=option.codecov_token,
         )
         uploader.add_network_files(git.ls_files())
-        from coverage.misc import CoverageException
+        from coverage.exceptions import CoverageException
         try:
             uploader.add_coverage_report(cov)
         except CoverageException as exc:
@@ -188,12 +203,20 @@ class CodecovPlugin:
             terminalreporter.write_line(f'ERROR: {error}', red=True, bold=True)
 
     @pytest.hookimpl(trylast=True)
-    def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
-        cov_plugin = config.pluginmanager.get_plugin('_cov')
+    def pytest_terminal_summary(
+        self,
+        terminalreporter: pytest.TerminalReporter,
+        exitstatus: int,
+        config: pytest.Config
+    ) -> None:
+        cov_plugin: CovPlugin | None = config.pluginmanager.get_plugin('_cov')
+        if cov_plugin is None:
+            return
+
         if cov_plugin.cov_controller is None:
             return
 
-        cov = cov_plugin.cov_controller.cov
+        cov: Coverage | None = cov_plugin.cov_controller.cov
         if cov is None:
             return
 
@@ -203,7 +226,7 @@ class CodecovPlugin:
         self.upload_report(terminalreporter, config, cov)
 
 
-def pytest_configure(config):  # pragma: no cover
+def pytest_configure(config: pytest.Config) -> None:  # pragma: no cover
     # NOTE: Don't report codecov results on worker nodes
     if hasattr(config, 'workerinput'):
         return
