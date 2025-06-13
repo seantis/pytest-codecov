@@ -68,6 +68,16 @@ source = ["pytest_codecov"]
 [tool.coverage.report]
 show_missing = true
 precision = 2
+exclude_lines = [
+    "pragma: no cover",
+    "pragma: unreachable",
+    "assert_never[(]",
+    "@overload",
+    "raise NotImplementedError",
+    "raise AssertionError[(].unreachable.[)]",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__."
+]
 
 [tool.mypy]
 python_version = "3.8"
