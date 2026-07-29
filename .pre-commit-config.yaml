@@ -38,3 +38,7 @@ repos:
         pass_filenames: false
         args: ["-p", "pytest_codecov", "-p", "tests"]
 
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.28.0
+    hooks:
+      - id: zizmor
