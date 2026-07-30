@@ -9,7 +9,7 @@ name = "pytest-codecov"
 dynamic = ["version"]
 description = "Pytest plugin for uploading pytest-cov results to codecov.io"
 readme = "README.rst"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [
     { name = "David Salvisberg", email = "david.salvisberg@seantis.ch" },
 ]
@@ -24,12 +24,11 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
@@ -80,7 +79,7 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 follow_imports = "silent"
 namespace_packages = true
 explicit_package_bases = true
@@ -124,30 +123,21 @@ include = [
 ]
 line-length = 79
 indent-width = 4
-target-version = "py38"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = [
-    "A005",
     "ASYNC",
     "B0",
-    "B904",
-    "B909",
     "C4",
-    "COM818",
     "E",
     "F",
-    "FLY002",
     "FURB",
-    "G010",
     "G2",
-    "I002",
     "ISC",
     "LOG",
     "N",
     "PERF",
-    "PGH004",
-    "PGH005",
     "PIE",
     "PT",
     "PYI",
@@ -159,10 +149,20 @@ select = [
     "T",
     "UP",
     "W",
+    "blanket-noqa",
+    "invalid-mock-access",
+    "logging-warn",
+    "loop-iterator-mutation",
+    "missing-required-import",
+    "raise-without-from-inside-except",
+    "static-join-to-f-string",
+    "stdlib-module-shadowing",
+    "trailing-comma-on-bare-tuple",
 ]
 ignore = [
-    "FURB101",
-    "FURB103",
+    "non-empty-init-module",
+    "read-whole-file",
+    "write-whole-file",
 ]
 unfixable = []
 preview = true
@@ -200,20 +200,19 @@ docstring-code-line-length = "dynamic"
 [tool.tox]
 legacy_tox_ini = """
     [tox]
-    envlist = py38,py39,py310,py311,py312,py313,mypy,ruff,report
+    envlist = py310,py311,py312,py313,py314,mypy,ruff,report
 
     [gh-actions]
     python =
-        3.8: py38
-        3.9: py39
         3.10: py310
         3.11: py311,ruff,mypy
         3.12: py312
         3.13: py313
+        3.14: py314
 
     [testenv]
     setenv =
-        py{38,39,310,311,312,313}: COVERAGE_FILE = .coverage.{envname}
+        py{310,311,312,313,314}: COVERAGE_FILE = .coverage.{envname}
     commands =
         pytest --cov --cov-report= {posargs:tests}
         pytest -n2 --cov --cov-report= {posargs:tests}
@@ -232,11 +231,11 @@ legacy_tox_ini = """
         mypy
         types-requests
     commands =
-        mypy -p pytest_codecov -p tests --python-version 3.9
         mypy -p pytest_codecov -p tests --python-version 3.10
         mypy -p pytest_codecov -p tests --python-version 3.11
         mypy -p pytest_codecov -p tests --python-version 3.12
         mypy -p pytest_codecov -p tests --python-version 3.13
+        mypy -p pytest_codecov -p tests --python-version 3.14
 
     [testenv:ruff]
     skip_install = true
