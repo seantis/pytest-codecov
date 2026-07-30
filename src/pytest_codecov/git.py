@@ -59,8 +59,7 @@ try:
     _origin = repo.remotes.origin
     if _origin:
         _url = _origin.url
-        if _url.endswith('.git'):
-            _url = _url[:-4]
+        _url = _url.removesuffix('.git')
         _parts = _url.split(':')[-1].split('/')
         if len(_parts) >= 2:
             slug = '/'.join(_parts[-2:])
