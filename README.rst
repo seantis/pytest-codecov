@@ -18,6 +18,10 @@ pytest-codecov
     :target: https://codecov.io/gh/seantis/pytest-codecov
     :alt: Codecov.io
 
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/j178/prek/master/docs/assets/badge-v0.json
+   :target: https://github.com/j178/prek
+   :alt: prek
+
 Pytest plugin for uploading `pytest-cov`_ results to `codecov.io`_
 
 ----

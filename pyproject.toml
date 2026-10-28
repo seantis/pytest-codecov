@@ -9,7 +9,7 @@ name = "pytest-codecov"
 dynamic = ["version"]
 description = "Pytest plugin for uploading pytest-cov results to codecov.io"
 readme = "README.rst"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "David Salvisberg", email = "david.salvisberg@seantis.ch" },
 ]
@@ -24,11 +24,11 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
@@ -46,6 +46,18 @@ git = [
     "GitPython>=3.1.15",
 ]
 
+[dependency-groups]
+dev = [
+    "bandit",
+    "mypy",
+    "prek",
+    "ruff",
+    "tox",
+    "tox-uv",
+    "types-requests",
+    "uv",
+]
+
 [project.urls]
 Repository = "https://github.com/seantis/pytest-codecov"
 
@@ -57,6 +69,9 @@ pytest_codecov = ["py.typed"]
 
 [tool.setuptools.dynamic]
 version = {attr = "pytest_codecov.__version__"}
+
+[tool.bandit]
+skips = ["B101"]
 
 [tool.coverage.paths]
 source = ["src"]
@@ -79,7 +94,7 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 follow_imports = "silent"
 namespace_packages = true
 explicit_package_bases = true
@@ -123,7 +138,7 @@ include = [
 ]
 line-length = 79
 indent-width = 4
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
@@ -198,54 +213,83 @@ docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
 [tool.tox]
-legacy_tox_ini = """
-    [tox]
-    envlist = py310,py311,py312,py313,py314,mypy,ruff,report
+isolated_build = true
+env_list = [
+    "py311",
+    "py312",
+    "py313",
+    "py314",
+    "py315",
+    "ruff",
+    "bandit",
+    "mypy",
+    "report",
+]
 
-    [gh-actions]
-    python =
-        3.10: py310
-        3.11: py311,ruff,mypy
-        3.12: py312
-        3.13: py313
-        3.14: py314
+[tool.tox.gh.python]
+"3.11" = ["py311"]
+"3.12" = ["py312", "ruff", "bandit", "mypy"]
+"3.13" = ["py313"]
+"3.14" = ["py314"]
+"3.15" = ["py315"]
 
-    [testenv]
-    setenv =
-        py{310,311,312,313,314}: COVERAGE_FILE = .coverage.{envname}
-    commands =
-        pytest --cov --cov-report= {posargs:tests}
-        pytest -n2 --cov --cov-report= {posargs:tests}
-    deps =
-        pytest
-        coverage
-        pytest-cov
-        pytest-xdist
-        .
-        GitPython
+[tool.tox.env_run_base]
+use_develop = true
+set_env.COVERAGE_FILE = { replace = "if", condition = "not factor.report", then = ".coverage.{env_name}"}
+deps = [
+    "coverage[toml]",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    ".",
+    "GitPython"
+]
+commands = [
+    [
+        "pytest",
+        "--cov",
+        "--cov-report=",
+        { replace = "posargs", default = ["tests"], extend = true }
+    ],
+    [
+        "pytest",
+        "-n2",
+        "--cov",
+        "--cov-report=",
+        { replace = "posargs", default = ["tests"], extend = true }
+    ],
+]
 
-    [testenv:mypy]
-    basepython = python3.11
-    deps =
-        -e{toxinidir}[git]
-        mypy
-        types-requests
-    commands =
-        mypy -p pytest_codecov -p tests --python-version 3.10
-        mypy -p pytest_codecov -p tests --python-version 3.11
-        mypy -p pytest_codecov -p tests --python-version 3.12
-        mypy -p pytest_codecov -p tests --python-version 3.13
-        mypy -p pytest_codecov -p tests --python-version 3.14
+[tool.tox.env.ruff]
+base_python = "python3.12"
+deps = ["ruff"]
+commands = [["ruff", "check"]]
 
-    [testenv:ruff]
-    skip_install = true
-    deps = ruff
-    commands = ruff check
+[tool.tox.env.mypy]
+base_python = "python3.12"
+deps = [
+    "GitPython",
+    "pytest",
+    "types-requests",
+]
+commands = [
+    ["mypy", "-p", "pytest_codecov", "-p", "tests", "--python-version", "3.11"],
+    ["mypy", "-p", "pytest_codecov", "-p", "tests", "--python-version", "3.12"],
+    ["mypy", "-p", "pytest_codecov", "-p", "tests", "--python-version", "3.13"],
+    ["mypy", "-p", "pytest_codecov", "-p", "tests", "--python-version", "3.14"],
+    ["mypy", "-p", "pytest_codecov", "-p", "tests", "--python-version", "3.15"],
+]
 
-    [testenv:report]
-    skip_install = true
-    deps = coverage
-    commands =
-        coverage combine
-        coverage report
-"""
+[tool.tox.env.bandit]
+base_python = "python3.12"
+deps = ["bandit[toml]"]
+commands = [["bandit", "-q", "-c", "pyproject.toml", "-r", "src"]]
+
+[tool.tox.env.report]
+base_python = "python3.12"
+skip_install = true
+deps = ["coverage"]
+commands = [
+    ["coverage", "combine"],
+    ["coverage", "report", "-m"],
+]
