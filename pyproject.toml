@@ -269,6 +269,7 @@ commands = [["ruff", "check"]]
 base_python = "python3.12"
 deps = [
     "GitPython",
+    "mypy",
     "pytest",
     "types-requests",
 ]
