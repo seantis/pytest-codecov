@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from pytest_cov.plugin import CovPlugin  # type: ignore[import-untyped]
 
 
-__version__ = '0.7.0'
+__version__ = '0.8.0'
 token_regex = re.compile(
     r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
 )
